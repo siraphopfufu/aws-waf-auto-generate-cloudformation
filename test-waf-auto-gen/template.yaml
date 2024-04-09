@@ -70,6 +70,40 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  WAFAutoGenerateBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: waf-auto-generate-bucket
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  DownloadCVEFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/download_cve/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Policies:
+        - Statement:
+            - Sid: DownloadCVEStatement1
+              Effect: Allow
+              Action:
+                - ssm:PutParameter
+                - ssm:GetParameter
+              Resource: '*'
+            - Sid: DownloadCVEStatement2
+              Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: arn:aws:s3:::frame-cve-bucket/*
+  
+
 Outputs:
   # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
   # Find out more about other implicit resources you can reference within SAM
