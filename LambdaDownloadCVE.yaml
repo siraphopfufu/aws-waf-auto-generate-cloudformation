@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation template to create a Lambda function and IAM role.
+
+Resources:
+
+  LambdaDownloadCVE:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: lambda-download-cve
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Code:
+        ZipFile: |
+         import boto3
+         import requests
+         from botocore.exceptions import ClientError
+         import urllib.request
+         
+         ssm = boto3.client('ssm')
+         s3 = boto3.client('s3')
+         bucket_name = 'frame-cve-bucket'
+         
+         def lambda_handler(event, context):
+           base_url = 'https://www.exploit-db.com/download/'
+           download_number = get_param("cve")
+           
+           while True:
+             download_url = f"{base_url}{download_number}"
+             print(download_url)
+             object_key = f"downloaded_files/Po{download_number}.ext"
+             
+             try:
+               curl = requests.get(download_url)
+               response = urllib.request.urlopen(download_url)
+               response = response.read()
+               
+               try:
+                 s3.put_object(
+                   Bucket=bucket_name,
+                   Key=object_key,
+                   Body=response
+                 )
+                 print(f"Downloaded file from {download_url} and uploaded to {bucket_name}/{object_key}")
+                 download_number = int(download_number)+1
+               except ClientError as e:
+                 print(f"Error uploading file to S3: {e}")
+                 break
+             except Exception as e:
+               update_param("cve", str(download_number))
+               return(f"URL: {download_url}. Does not exist no more CVE for today.")
+               break
+         
+         def get_param(name):
+           try:
+             parameter = ssm.get_parameter(Name=name)
+             return parameter["Parameter"]["Value"]
+           except Exception as e:
+             response = update_param(name, '51950')
+             parameter = ssm.get_parameter(Name=name)
+             return parameter["Parameter"]["Value"]
+         
+         def update_param(name, value):
+           response = ssm.put_parameter(
+             Name=name,
+             Value=value,
+             Type='String',
+             Overwrite=True
+           )
+           return response
+     
+      Role: !GetAtt LambdaDownloadCVERole.Arn
+
+  LambdaDownloadCVERole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambda-download-cve-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: cwlogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: logs:CreateLogGroup
+                Resource: !Join 
+                  - ':'
+                  - - 'arn:aws:logs'
+                    - !Ref 'AWS::Region'
+                    - !Ref 'AWS::AccountId'
+                    - '*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Join
+                    - ':'
+                    - - 'arn:aws:logs'
+                      - !Ref 'AWS::Region'
+                      - !Ref 'AWS::AccountId'
+                      - 'log-group'
+                      - '/aws/lambda/*'
+                      - '*'
+        - PolicyName: s3-put-object
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: VisualEditor0
+                Effect: Allow
+                Action: s3:PutObject
+                Resource: 'arn:aws:s3:::frame-cve-bucket/*' 
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
