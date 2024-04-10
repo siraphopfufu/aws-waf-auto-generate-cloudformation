@@ -1,75 +1,24 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description: |-
   waf-auto-gen
-
   Sample SAM Template for test-waf-auto-gen
-
+Parameters:
+  Email:
+    Type: String
+    Default: example@example.com
+    Description: The email that will recieve a message.
 Resources:
-  StockTradingStateMachine:
-    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+  WAFAutoGenerateBucket:
+    Type: AWS::S3::Bucket
     Properties:
-      DefinitionUri: statemachine/waf_gen.asl.json
-      DefinitionSubstitutions:
-        BedRockWAFGenFunctionArn: !GetAtt BedRockWAFGenFunctionArn.Arn
-        SESFunctionArn: !GetAtt SESFunction.Arn
-        ApplyWAFArn: !GetAtt ApplyWAF.Arn
-        WAFFixArn: !GetAtt WAFFix.Arn
-        BedrockFilterArn: !GetAtt BedrockFilter.Arn
-      Events:
-        HourlyTradingSchedule:
-          Type: Schedule # More info about Schedule Event Source: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-statemachine-schedule.html
-          Properties:
-            Description: Schedule to run the stock trading state machine every hour
-            Enabled: False # This schedule is disabled by default to avoid incurring charges.
-            Schedule: "rate(1 hour)"
-      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
-        - LambdaInvokePolicy:
-            FunctionName: !Ref BedRockWAFGenFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref SESFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref ApplyWAF
-        - LambdaInvokePolicy:
-            FunctionName: !Ref WAFFix
-        - LambdaInvokePolicy:
-            FunctionName: !Ref BedrockFilter
-
-  BedRockWAFGenFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
-    Properties:
-      CodeUri: functions/bedrock_waf_generate/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-
-  SESFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/SES/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-
-  ApplyWAF:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/Apply_WAF/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-
-  WAFFix:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/bedrock_waf_fix/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
+      BucketName: !Sub waf-auto-generate-bucket-${AWS::AccountId}
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
   BedrockFilter:
     Type: AWS::Serverless::Function
     Properties:
@@ -78,14 +27,222 @@ Resources:
       Runtime: python3.12
       Architectures:
         - x86_64
+      Policies:
+        - Statement:
+            - Sid: Statement1
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource:
+                - arn:aws:s3:::frame-cve-bucket/*
+            - Effect: Allow
+              Sid: InvokeModel1
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - arn:aws:bedrock:us-east-1::foundation-model/*
+          
+#   AWSautoWAFgeneration:
+#     Type: AWS::Serverless::StateMachine
+#     Properties:
+#       DefinitionSubstitutions:
+#         ApiEndpoint: !Ref ApprovalEndPoint
+#         Email: !Ref Email
+#         BedRockWAFGenFunctionArn: !GetAtt BedRockWAFGenFunction.Arn
+#         SESFunctionArn: !GetAtt SESFunction.Arn
+#         ApplyWAFArn: !GetAtt ApplyWAF.Arn
+#         WAFFixArn: !GetAtt WAFFix.Arn
+#         BedrockFilterArn: !GetAtt BedrockFilter.Arn
+#         mailArn: !GetAtt mail.Arn
+#       Policies:
+#         - LambdaInvokePolicy:
+#             FunctionName: !Ref BedRockWAFGenFunction
+#         - LambdaInvokePolicy:
+#             FunctionName: !Ref SESFunction
+#         - LambdaInvokePolicy:
+#             FunctionName: !Ref ApplyWAF
+#         - LambdaInvokePolicy:
+#             FunctionName: !Ref WAFFix
+#         - LambdaInvokePolicy:
+#             FunctionName: !Ref BedrockFilter
+#       DefinitionUri: statemachine/waf_gen.asl.json
+#   BedRockWAFGenFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: functions/bedrock_waf_generate/
+#       Handler: app.lambda_handler
+#       Runtime: python3.12
+#       Architectures:
+#         - x86_64
+#   SESFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: functions/SES/
+#       Handler: app.lambda_handler
+#       Runtime: python3.12
+#       Architectures:
+#         - x86_64
+#       Environment:
+#         Variables:
+#           Email: !Ref Email
+#   ApplyWAF:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: functions/Apply_WAF/
+#       Handler: app.lambda_handler
+#       Runtime: python3.12
+#       Architectures:
+#         - x86_64
+#   WAFFix:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: functions/bedrock_waf_fix/
+#       Handler: app.lambda_handler
+#       Runtime: python3.12
+#       Architectures:
+#         - x86_64
 
-Outputs:
-  # StockTradingStateMachineHourlyTradingSchedule is an implicit Schedule event rule created out of Events key under Serverless::StateMachine
-  # Find out more about other implicit resources you can reference within SAM
-  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-generated-resources.html
-  StockTradingStateMachineArn:
-    Description: "Stock Trading State machine ARN"
-    Value: !Ref StockTradingStateMachine
-  StockTradingStateMachineRoleArn:
-    Description: "IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates"
-    Value: !GetAtt StockTradingStateMachineRole.Arn
+#   ApproveApi:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: functions/approve_api/
+#       Handler: app.lambda_handler
+#       Runtime: nodejs18.x
+#       Architectures:
+#         - x86_64
+#       Events:
+#         ApprovalEndPointGET:
+#           Type: Api
+#           Properties:
+#             Path: /
+#             Method: GET
+#             RestApiId: !Ref ApprovalEndPoint
+#       Environment:
+#         Variables:
+#           SES_ARN: !GetAtt SESFunction.Arn
+#           STATEMACHINENARN: !Ref AWSautoWAFgeneration
+#           APPROVALENDPOINT: !Ref ApprovalEndPoint
+#   mail:
+#     Type: AWS::SNS::Topic
+#   ApprovalEndPoint:
+#     Type: AWS::Serverless::Api
+#     Properties:
+#       Name:
+#         Fn::Sub: ${ResourceName} From Stack ${AWS::StackName}
+#         ResourceName: ApprovalEndPoint
+#       StageName: Prod
+#       DefinitionBody:
+#         openapi: 3
+#         info: {}
+#         paths:
+#           /:
+#             get:
+#               x-amazon-apigateway-integration:
+#                 httpMethod: POST
+#                 type: aws_proxy
+#                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApproveApi.Arn}/invocations
+#               responses: {}
+#       EndpointConfiguration: REGIONAL
+#       TracingEnabled: true
+#       Cors:
+#         MaxAge: 5
+#   EventRule:
+#     Type: AWS::Events::Rule
+#     Properties:
+#       EventPattern:
+#         source:
+#           - aws.s3
+#         detail-type:
+#           - Object Created
+#         detail:
+#           bucket:
+#             name:
+#               - !Sub ${AWS::StackName}-cve-${AWS::AccountId}
+#       Targets:
+#         - Id: !GetAtt AWSautoWAFgeneration.Name
+#           Arn: !Ref AWSautoWAFgeneration
+#           RoleArn: !GetAtt EventRuleToAWSautoWAFgenerationRole.Arn
+#   EventRuleToAWSautoWAFgenerationRole:
+#     Type: AWS::IAM::Role
+#     Properties:
+#       AssumeRolePolicyDocument:
+#         Version: '2012-10-17'
+#         Statement:
+#           Effect: Allow
+#           Principal:
+#             Service: !Sub events.${AWS::URLSuffix}
+#           Action: sts:AssumeRole
+#           Condition:
+#             ArnLike:
+#               aws:SourceArn: !Sub
+#                 - arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${AWS::StackName}-${ResourceId}-*
+#                 - ResourceId: EventRule
+#   EventRuleToAWSautoWAFgenerationConnector:
+#     Type: AWS::IAM::ManagedPolicy
+#     Properties:
+#       PolicyDocument:
+#         Statement:
+#           - Effect: Allow
+#             Action:
+#               - states:StartExecution
+#             Resource:
+#               - !Ref AWSautoWAFgeneration
+#         Version: '2012-10-17'
+#       Roles:
+#         - !Ref EventRuleToAWSautoWAFgenerationRole
+#   cve:
+#     Type: AWS::S3::Bucket
+#     Properties:
+#       BucketName: !Sub ${AWS::StackName}-cve-${AWS::AccountId}
+#       BucketEncryption:
+#         ServerSideEncryptionConfiguration:
+#           - ServerSideEncryptionByDefault:
+#               SSEAlgorithm: aws:kms
+#               KMSMasterKeyID: alias/aws/s3
+#       PublicAccessBlockConfiguration:
+#         IgnorePublicAcls: true
+#         RestrictPublicBuckets: true
+#   cveBucketPolicy:
+#     Type: AWS::S3::BucketPolicy
+#     Properties:
+#       Bucket: !Ref cve
+#       PolicyDocument:
+#         Id: RequireEncryptionInTransit
+#         Version: '2012-10-17'
+#         Statement:
+#           - Principal: '*'
+#             Action: '*'
+#             Effect: Deny
+#             Resource:
+#               - !GetAtt cve.Arn
+#               - !Sub ${cve.Arn}/*
+#             Condition:
+#               Bool:
+#                 aws:SecureTransport: 'false'
+#   ApproveApiPermission:
+#     Type: AWS::Lambda::Permission
+#     Properties:
+#       FunctionName: !GetAtt ApproveApi.Arn
+#       Action: lambda:InvokeFunction
+#       Principal: apigateway.amazonaws.com
+#       SourceArn: !Join
+#         - ''
+#         - - 'arn:'
+#           - !Ref AWS::Partition
+#           - ':execute-api:'
+#           - !Ref AWS::Region
+#           - ':'
+#           - !Ref AWS::AccountId
+#           - ':'
+#           - !Ref ApprovalEndPoint
+#           - /*
+# Outputs:
+#   StockTradingStateMachineArn:
+#     Description: Stock Trading State machine ARN
+#     Value: !Ref AWSautoWAFgeneration
+#   StockTradingStateMachineRoleArn:
+#     Description: IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates
+#     Value: !GetAtt EventRuleToAWSautoWAFgenerationRole.Arn
+#   ApprovalEndPointUrl:
+#     Description: API Gateway endpoint URL for the approval process
+#     Value: !Sub https://${ApprovalEndPoint}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/

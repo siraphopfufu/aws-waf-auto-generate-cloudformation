@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'waf-auto-gen
+
+  Sample SAM Template for test-waf-auto-gen'
+Parameters:
+  Email:
+    Type: String
+    Default: example@example.com
+    Description: The email that will recieve a message.
+Resources:
+  BedrockFilter:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: BedrockFilter
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+    Metadata:
+      SamResourceId: BedrockFilter
