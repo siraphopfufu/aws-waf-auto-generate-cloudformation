@@ -33,8 +33,101 @@ Resources:
               Effect: Allow
               Action:
                 - s3:GetObject
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref WAFAutoGenerateBucket
+                  - /*
+            - Effect: Allow
+              Sid: InvokeModel1
+              Action:
+                - bedrock:InvokeModel
               Resource:
-                - arn:aws:s3:::frame-cve-bucket/*
+                - arn:aws:bedrock:us-east-1::foundation-model/*
+
+  BedRockWAFGenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/bedrock_waf_generate/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Policies:
+        - Statement:
+            - Sid: Statement1
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref WAFAutoGenerateBucket
+                  - /*
+            - Effect: Allow
+              Sid: InvokeModel1
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - arn:aws:bedrock:us-east-1::foundation-model/*
+  SESFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/SES/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          Email: !Ref Email
+      Policies:
+        - Statement:
+            - Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: arn:aws:logs:*:*:*
+              Effect: Allow
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+              Resource: '*'
+  ApplyWAF:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/Apply_WAF/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Policies:
+        - Statement:
+            - Sid: VisualEditor0
+              Effect: Allow
+              Action:
+                - ssm:PutParameter
+                - ssm:GetParameter
+              Resource: '*'
+            - Sid: AllowUseOfAWSWAF
+              Effect: Allow
+              Action:
+                - waf-regional:*
+                - wafv2:*
+                - elasticloadbalancing:SetWebACL
+                - apigateway:SetWebACL
+                - appsync:SetWebACL
+              Resource: '*'
+  WAFFix:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/bedrock_waf_fix/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Policies:
+        - Statement:
             - Effect: Allow
               Sid: InvokeModel1
               Action:
@@ -66,41 +159,8 @@ Resources:
 #         - LambdaInvokePolicy:
 #             FunctionName: !Ref BedrockFilter
 #       DefinitionUri: statemachine/waf_gen.asl.json
-#   BedRockWAFGenFunction:
-#     Type: AWS::Serverless::Function
-#     Properties:
-#       CodeUri: functions/bedrock_waf_generate/
-#       Handler: app.lambda_handler
-#       Runtime: python3.12
-#       Architectures:
-#         - x86_64
-#   SESFunction:
-#     Type: AWS::Serverless::Function
-#     Properties:
-#       CodeUri: functions/SES/
-#       Handler: app.lambda_handler
-#       Runtime: python3.12
-#       Architectures:
-#         - x86_64
-#       Environment:
-#         Variables:
-#           Email: !Ref Email
-#   ApplyWAF:
-#     Type: AWS::Serverless::Function
-#     Properties:
-#       CodeUri: functions/Apply_WAF/
-#       Handler: app.lambda_handler
-#       Runtime: python3.12
-#       Architectures:
-#         - x86_64
-#   WAFFix:
-#     Type: AWS::Serverless::Function
-#     Properties:
-#       CodeUri: functions/bedrock_waf_fix/
-#       Handler: app.lambda_handler
-#       Runtime: python3.12
-#       Architectures:
-#         - x86_64
+
+
 
 #   ApproveApi:
 #     Type: AWS::Serverless::Function

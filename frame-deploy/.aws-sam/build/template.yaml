@@ -9,6 +9,17 @@ Parameters:
     Default: example@example.com
     Description: The email that will recieve a message.
 Resources:
+  WAFAutoGenerateBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: waf-auto-generate-bucket-${AWS::AccountId}
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
   BedrockFilter:
     Type: AWS::Serverless::Function
     Properties:
@@ -17,5 +28,122 @@ Resources:
       Runtime: python3.12
       Architectures:
       - x86_64
+      Policies:
+      - Statement:
+        - Sid: Statement1
+          Effect: Allow
+          Action:
+          - s3:GetObject
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WAFAutoGenerateBucket
+              - /*
+        - Effect: Allow
+          Sid: InvokeModel1
+          Action:
+          - bedrock:InvokeModel
+          Resource:
+          - arn:aws:bedrock:us-east-1::foundation-model/*
     Metadata:
       SamResourceId: BedrockFilter
+  BedRockWAFGenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: BedRockWAFGenFunction
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Policies:
+      - Statement:
+        - Sid: Statement1
+          Effect: Allow
+          Action:
+          - s3:GetObject
+          Resource:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:s3:::'
+              - Ref: WAFAutoGenerateBucket
+              - /*
+        - Effect: Allow
+          Sid: InvokeModel1
+          Action:
+          - bedrock:InvokeModel
+          Resource:
+          - arn:aws:bedrock:us-east-1::foundation-model/*
+    Metadata:
+      SamResourceId: BedRockWAFGenFunction
+  SESFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: SESFunction
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Environment:
+        Variables:
+          Email:
+            Ref: Email
+      Policies:
+      - Statement:
+        - Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource: arn:aws:logs:*:*:*
+          Effect: Allow
+        - Effect: Allow
+          Action:
+          - ses:SendEmail
+          Resource: '*'
+    Metadata:
+      SamResourceId: SESFunction
+  ApplyWAF:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ApplyWAF
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Policies:
+      - Statement:
+        - Sid: VisualEditor0
+          Effect: Allow
+          Action:
+          - ssm:PutParameter
+          - ssm:GetParameter
+          Resource: '*'
+        - Sid: AllowUseOfAWSWAF
+          Effect: Allow
+          Action:
+          - waf-regional:*
+          - wafv2:*
+          - elasticloadbalancing:SetWebACL
+          - apigateway:SetWebACL
+          - appsync:SetWebACL
+          Resource: '*'
+    Metadata:
+      SamResourceId: ApplyWAF
+  WAFFix:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: WAFFix
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Sid: InvokeModel1
+          Action:
+          - bedrock:InvokeModel
+          Resource:
+          - arn:aws:bedrock:us-east-1::foundation-model/*
+    Metadata:
+      SamResourceId: WAFFix
