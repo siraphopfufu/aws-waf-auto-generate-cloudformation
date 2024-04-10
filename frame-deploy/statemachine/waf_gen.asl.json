@@ -65,6 +65,7 @@
 		},
 		"Lambda Callback": {
 			"Type": "Task",
+<<<<<<< HEAD
 			"Resource": "arn:aws:states:::lambda:invoke",
 			"Parameters": {
 			  "FunctionName": "${SESFunctionArn}",
@@ -92,6 +93,34 @@
 			  }
 			],
 			"Default": "Success"
+=======
+			"Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+			"Parameters": {
+				"FunctionName": "${SESFunctionArn}",
+				"Payload": {
+					"ExecutionContext.$": "$$",
+					"APIGatewayEndpoint": "https://a7kqlbugab.execute-api.us-east-1.amazonaws.com/states",
+					"rules.$": "$"
+				}
+			},
+			"ResultPath": "$.Status",
+			"Next": "ManualApprovalChoiceState"
+		},
+		"ManualApprovalChoiceState": {
+			"Type": "Choice",
+			"Choices": [
+				{
+					"Variable": "$.Status.Status",
+					"StringMatches": "Approved! Task approved by 6322772532@g.siit.tu.ac.th",
+					"Next": "Pass"
+				},
+				{
+					"Variable": "$.Status.Status",
+					"StringMatches": "Rejected! Task rejected by 6322772532@g.siit.tu.ac.th",
+					"Next": "Success"
+				}
+			]
+>>>>>>> 2fdfba13e11070f03f5582c9d5b9e19e43551a65
 		},
 		"Pass": {
 			"Type": "Pass",

@@ -219,7 +219,7 @@ Resources:
 #             Condition:
 #               Bool:
 #                 aws:SecureTransport: 'false'
-#   ApproveApiPermission:
+#   ApproveAspiPermission:
 #     Type: AWS::Lambda::Permission
 #     Properties:
 #       FunctionName: !GetAtt ApproveApi.Arn
