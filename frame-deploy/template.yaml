@@ -1,81 +1,374 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Description: |
-  waf-auto-gen
-  Sample SAM Template for test-waf-auto-gen
-Resources:
-  StockTradingStateMachine:
-    Type: AWS::Serverless::StateMachine
-    Properties:
-      DefinitionSubstitutions:
-        BedRockWAFGenFunctionArn: !GetAtt BedRockWAFGenFunctionArn.Arn
-        SESFunctionArn: !GetAtt SESFunction.Arn
-        ApplyWAFArn: !GetAtt ApplyWAF.Arn
-        WAFFixArn: !GetAtt WAFFix.Arn
-        BedrockFilterArn: !GetAtt BedrockFilter.Arn
-      Events:
-        HourlyTradingSchedule:
-          Type: Schedule
-          Properties:
-            Description: Schedule to run the stock trading state machine every hour
-            Enabled: false
-            Schedule: rate(1 hour)
-      Policies:
-        - LambdaInvokePolicy:
-            FunctionName: !Ref BedRockWAFGenFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref SESFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref ApplyWAF
-        - LambdaInvokePolicy:
-            FunctionName: !Ref WAFFix
-        - LambdaInvokePolicy:
-            FunctionName: !Ref BedrockFilter
-      DefinitionUri: statemachine/waf_gen.asl.json
-  BedRockWAFGenFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/bedrock_waf_generate/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-  SESFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/SES/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-  ApplyWAF:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/Apply_WAF/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-  WAFFix:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/bedrock_waf_fix/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-  BedrockFilter:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/bedrock_cve_filter/
-      Handler: app.lambda_handler
-      Runtime: python3.12
-      Architectures:
-        - x86_64
-Outputs:
-  StockTradingStateMachineArn:
-    Description: Stock Trading State machine ARN
-    Value: !Ref StockTradingStateMachine
-  StockTradingStateMachineRoleArn:
-    Description: IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates
-    Value: !GetAtt StockTradingStateMachineRole.Arn
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Transform": "AWS::Serverless-2016-10-31",
+	"Description": "waf-auto-gen\nSample SAM Template for test-waf-auto-gen\n",
+	"Resources": {
+		"AWSautoWAFgeneration": {
+			"Type": "AWS::Serverless::StateMachine",
+			"Properties": {
+				"DefinitionSubstitutions": {
+					"BedRockWAFGenFunctionArn": {
+						"Fn::GetAtt": [
+							"BedRockWAFGenFunction",
+							"Arn"
+						]
+					},
+					"SESFunctionArn": {
+						"Fn::GetAtt": [
+							"SESFunction",
+							"Arn"
+						]
+					},
+					"ApplyWAFArn": {
+						"Fn::GetAtt": [
+							"ApplyWAF",
+							"Arn"
+						]
+					},
+					"WAFFixArn": {
+						"Fn::GetAtt": [
+							"WAFFix",
+							"Arn"
+						]
+					},
+					"BedrockFilterArn": {
+						"Fn::GetAtt": [
+							"BedrockFilter",
+							"Arn"
+						]
+					},
+					"mailArn": {
+						"Fn::GetAtt": [
+							"mail",
+							"Arn"
+						]
+					}
+				},
+				"Policies": [
+					{
+						"LambdaInvokePolicy": {
+							"FunctionName": {
+								"Ref": "BedRockWAFGenFunction"
+							}
+						}
+					},
+					{
+						"LambdaInvokePolicy": {
+							"FunctionName": {
+								"Ref": "SESFunction"
+							}
+						}
+					},
+					{
+						"LambdaInvokePolicy": {
+							"FunctionName": {
+								"Ref": "ApplyWAF"
+							}
+						}
+					},
+					{
+						"LambdaInvokePolicy": {
+							"FunctionName": {
+								"Ref": "WAFFix"
+							}
+						}
+					},
+					{
+						"LambdaInvokePolicy": {
+							"FunctionName": {
+								"Ref": "BedrockFilter"
+							}
+						}
+					}
+				],
+				"DefinitionUri": "statemachine/waf_gen.asl.json"
+			}
+		},
+		"BedRockWAFGenFunction": {
+			"Type": "AWS::Serverless::Function",
+			"Properties": {
+				"CodeUri": "functions/bedrock_waf_generate/",
+				"Handler": "app.lambda_handler",
+				"Runtime": "python3.12",
+				"Architectures": [
+					"x86_64"
+				]
+			}
+		},
+		"SESFunction": {
+			"Type": "AWS::Serverless::Function",
+			"Properties": {
+				"CodeUri": "functions/SES/",
+				"Handler": "app.lambda_handler",
+				"Runtime": "python3.12",
+				"Architectures": [
+					"x86_64"
+				]
+			}
+		},
+		"ApplyWAF": {
+			"Type": "AWS::Serverless::Function",
+			"Properties": {
+				"CodeUri": "functions/Apply_WAF/",
+				"Handler": "app.lambda_handler",
+				"Runtime": "python3.12",
+				"Architectures": [
+					"x86_64"
+				]
+			}
+		},
+		"WAFFix": {
+			"Type": "AWS::Serverless::Function",
+			"Properties": {
+				"CodeUri": "functions/bedrock_waf_fix/",
+				"Handler": "app.lambda_handler",
+				"Runtime": "python3.12",
+				"Architectures": [
+					"x86_64"
+				]
+			}
+		},
+		"BedrockFilter": {
+			"Type": "AWS::Serverless::Function",
+			"Properties": {
+				"CodeUri": "functions/bedrock_cve_filter/",
+				"Handler": "app.lambda_handler",
+				"Runtime": "python3.12",
+				"Architectures": [
+					"x86_64"
+				]
+			}
+		},
+		"ApproveApi": {
+			"Type": "AWS::Serverless::Function",
+			"Properties": {
+				"CodeUri": "functions/approve_api/",
+				"Handler": "app.lambda_handler",
+				"Runtime": "Node.js 18.x",
+				"Architectures": [
+					"x86_64"
+				],
+				"Events": {
+					"ApprovalEndPointGET": {
+						"Type": "Api",
+						"Properties": {
+							"Path": "/",
+							"Method": "GET",
+							"RestApiId": {
+								"Ref": "ApprovalEndPoint"
+							}
+						}
+					}
+				}
+			}
+		},
+		"mail": {
+			"Type": "AWS::SNS::Topic"
+		},
+		"ApprovalEndPoint": {
+			"Type": "AWS::Serverless::Api",
+			"Properties": {
+				"Name": {
+					"Fn::Sub": [
+						"${ResourceName} From Stack ${AWS::StackName}",
+						{
+							"ResourceName": "ApprovalEndPoint"
+						}
+					]
+				},
+				"StageName": "Prod",
+				"DefinitionBody": {
+					"openapi": "3.0",
+					"info": {},
+					"paths": {
+						"/": {
+							"get": {
+								"x-amazon-apigateway-integration": {
+									"httpMethod": "POST",
+									"type": "aws_proxy",
+									"uri": {
+										"Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ApproveApi.Arn}/invocations"
+									}
+								},
+								"responses": {}
+							}
+						}
+					}
+				},
+				"EndpointConfiguration": "REGIONAL",
+				"TracingEnabled": true,
+				"Cors": {
+					"MaxAge": 5
+				}
+			}
+		},
+		"EventRule": {
+			"Type": "AWS::Events::Rule",
+			"Properties": {
+				"EventPattern": {
+					"source": [
+						"aws.s3"
+					],
+					"detail-type": [
+						"Object Created"
+					],
+					"detail": {
+						"bucket": {
+							"name": [
+								"${AWS::StackName}-cve-${AWS::AccountId}"
+							]
+						}
+					}
+				},
+				"Targets": [
+					{
+						"Id": {
+							"Fn::GetAtt": [
+								"AWSautoWAFgeneration",
+								"Name"
+							]
+						},
+						"Arn": {
+							"Ref": "AWSautoWAFgeneration"
+						},
+						"RoleArn": {
+							"Fn::GetAtt": [
+								"EventRuleToAWSautoWAFgenerationRole",
+								"Arn"
+							]
+						}
+					}
+				]
+			}
+		},
+		"EventRuleToAWSautoWAFgenerationRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": {
+						"Effect": "Allow",
+						"Principal": {
+							"Service": {
+								"Fn::Sub": "events.${AWS::URLSuffix}"
+							}
+						},
+						"Action": "sts:AssumeRole",
+						"Condition": {
+							"ArnLike": {
+								"aws:SourceArn": {
+									"Fn::Sub": [
+										"arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${AWS::StackName}-${ResourceId}-*",
+										{
+											"ResourceId": "EventRule"
+										}
+									]
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"EventRuleToAWSautoWAFgenerationConnector": {
+			"Type": "AWS::IAM::ManagedPolicy",
+			"Properties": {
+				"PolicyDocument": {
+					"Statement": [
+						{
+							"Effect": "Allow",
+							"Action": [
+								"states:StartExecution"
+							],
+							"Resource": [
+								{
+									"Ref": "AWSautoWAFgeneration"
+								}
+							]
+						}
+					],
+					"Version": "2012-10-17"
+				},
+				"Roles": [
+					{
+						"Ref": "EventRuleToAWSautoWAFgenerationRole"
+					}
+				]
+			}
+		},
+		"cve": {
+			"Type": "AWS::S3::Bucket",
+			"Properties": {
+				"BucketName": {
+					"Fn::Sub": "${AWS::StackName}-cve-${AWS::AccountId}"
+				},
+				"BucketEncryption": {
+					"ServerSideEncryptionConfiguration": [
+						{
+							"ServerSideEncryptionByDefault": {
+								"SSEAlgorithm": "aws:kms",
+								"KMSMasterKeyID": "alias/aws/s3"
+							}
+						}
+					]
+				},
+				"PublicAccessBlockConfiguration": {
+					"IgnorePublicAcls": true,
+					"RestrictPublicBuckets": true
+				}
+			}
+		},
+		"cveBucketPolicy": {
+			"Type": "AWS::S3::BucketPolicy",
+			"Properties": {
+				"Bucket": {
+					"Ref": "cve"
+				},
+				"PolicyDocument": {
+					"Id": "RequireEncryptionInTransit",
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+							"Principal": "*",
+							"Action": "*",
+							"Effect": "Deny",
+							"Resource": [
+								{
+									"Fn::GetAtt": [
+										"cve",
+										"Arn"
+									]
+								},
+								{
+									"Fn::Sub": "${cve.Arn}/*"
+								}
+							],
+							"Condition": {
+								"Bool": {
+									"aws:SecureTransport": "false"
+								}
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	"Outputs": {
+		"StockTradingStateMachineArn": {
+			"Description": "Stock Trading State machine ARN",
+			"Value": {
+				"Ref": "StockTradingStateMachine"
+			}
+		},
+		"StockTradingStateMachineRoleArn": {
+			"Description": "IAM Role created for Stock Trading State machine based on the specified SAM Policy Templates",
+			"Value": {
+				"Fn::GetAtt": [
+					"StockTradingStateMachineRole",
+					"Arn"
+				]
+			}
+		}
+	}
+}
