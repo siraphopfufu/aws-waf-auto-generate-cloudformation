@@ -1,4 +1,0 @@
-resource = "wordpress v2.1.6, Blood Bank v1.0, Axigen v10.5.6, 	Casdoor v1.330.7, Human Resource Management System v1.0, and Microsoft Window 11"
-instruction = ("""Read the following exploitation and identify if resource on my system is vulnerable to the exploitation. The System that I am using is including %s. 
-read the exploitation carefully and see if any vulnerability match the system that I am using 
-if it match return {status: 200} if not return {"status": 0} in json. Please return only the JSON no need to include ''' or json or any desPribtion please follow the instruction strictly""" %resource)
