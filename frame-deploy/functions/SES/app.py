@@ -81,9 +81,14 @@ def lambda_handler(event, context):
             <span class="section-title">Description:</span><br>
             {description}
         </div>
+        <div class="section">
+            <span class="section-title">Sample Command:</span><br>
+            {command} <br><br>
+            <span style="color: red;">This is a sample command. Use it with consideration, as the command might not be 100% accurate.</span>
+        </div>
         <a class="button" href="{approve_endpoint}">Approve</a>
         <a class="button" href="{reject_endpoint}">Reject</a>
-        <p>Thanks for using Step functions!</p>
+        <p>Thanks for using WAF Auto Generation!</p>
     </body>
     </html>
     """
