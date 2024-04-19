@@ -4,4 +4,4 @@ This solution is a demonstration of how generative AI can be intregrated with cy
 ### Solution Concept
 This solution utilized amazon Bedrock which is a foundation model in order to generated aws WAF from Common Vulnerability and Exploit or CVE to create a virtual patching for your website or service. These solution is a prove of concept that Generative AI can be implement with cyber security fields to strengthen defense and reduce workload or overhead for cyber security team.
 ## Architect
-![WAF Auto Generated Architecture](source/architect/Architect.jpg)
+![WAF Auto Generated Architecture](architect/Architect.jpg)
