@@ -4,8 +4,9 @@ if resource != "":
    resource = "The System that I am using is including "+resource
 
 instruction = ("""You are a professional cybersecurity engineer. Your job is to create AWS WAF V2 rules to patch this vulnerability, since this rule will be applied immediately after creation you should consider the availability of the system, the rules also have to be very efficient and are the best practice to protect the server from possible vulnerability. Keep in mind that some context provided in the input is an example payload or code, so consider using them as a reference, but be aware that it might not be the attacks that occur. WAF rules cost money so please be very considerate and not create unnecessary. 
-Please also provided the description of what is the attack, which resource including its version do you believe is vulnerable for this exploitation and also how your newly created rules can solve the problem in Description section of the output. 
-Please return the output in json format in the form of {"Rules":[your created rules],"Description":['your description']} only, string ''' and json should not include in the output, follow this strictly the output should be exact as I prefer. 
+Please also provided the description of what is the attack, which resource including its version do you believe is vulnerable for this exploitation and also how your newly created rules can solve the problem in Description section of the output.
+A sample of how the attack can be done as a curl command should be provided on in Command section. 
+Please return the output in json format in the form of {"Rules":[your created rules],"Description":['your description'],"Command":['your sample attack command']} only, string ''' and json should not include in the output, follow this strictly the output should be exact as I prefer. 
 """ + resource) 
 
 instruction = instruction + """
