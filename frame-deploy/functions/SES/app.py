@@ -102,6 +102,7 @@ def lambda_handler(event, context):
         execution_name=execution_name,
         rules_json=rules_json,
         description=description,
+        command=event.get("rules", {}).get("Command", ''),
         approve_endpoint=approve_endpoint,
         reject_endpoint=reject_endpoint
     )
