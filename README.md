@@ -11,7 +11,7 @@ This project utilized amazon Bedrock which is a foundation model in order to gen
 - [Python 3.12](https://www.python.org/downloads/), installed
 - [AWS Command Line Interface (AWS CLI)](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) version 2, installed
 - [AWS Serverless Application Model (SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-getting-started.html), installed
-- Access to claude 3 sonnet model or any model on bedrock, but you will have to edit all code that need to access the foundation model using bedrock to model of your desire
+- ❗❗❗Access to claude 3 sonnet model or any model on bedrock, but you will have to edit all lambda that need to access the foundation model using bedrock to model of your desire❗❗❗
 
 ### Installation ⬇️
 
