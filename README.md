@@ -30,7 +30,7 @@ After that input your Email(the input Email should also subscribe to amazon SES)
 2. You can disable ScheduleRule if you not wish to download CVE every 24 hours, you can run the lambda function DownloadCVEFunction to download CVE.
 3. Please check the CVE download number on [Exploit DB](https://www.exploit-db.com/) and edit value in exception ('51990') ![param](param.png) to match the file you wanted to start dowload you can doing so by hovering your cursor on download icon ![download](download.png)
 4. if you wish to do it all manually you can upload the .txt file directly to the bucket 'waf-auto-generate-bucket' that is created on your account. The event will trigger the stepfunction. Removing the filter lambda function, since it the flow will be reject if inputed resource is not in your resource list ![remove filter](stepfunc_rm_filter.png)
-5. After the WAF rules is generated from bedrock it will send you an Email in your address 
+5. After the WAF rules is generated from bedrock it will send you an Email to your address 
 the Email included:
 - WAF rules generated
 - Approve and Reject button (clicking approve will immedietly apply the generated WAF rules)
