@@ -15,7 +15,7 @@ This project utilized amazon Bedrock which is a foundation model in order to gen
 
 ### Installation ⬇️
 
-The CloudFormation stack must be deployed in the same AWS account and region where a GuardDuty detector has been configured and your EC2 instances are running.
+The CloudFormation stack must be deployed in the AWS region us-east-1
 
 ```
 git clone https://github.com/siraphopfufu/aws-waf-auto-generate-cloudformation.git
